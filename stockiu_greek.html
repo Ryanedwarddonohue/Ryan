@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockIU — IU Greek Life Markets</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --surface: #111;
+  --card: #161616;
+  --border: #1f1f1f;
+  --border2: #2a2a2a;
+  --text: #F2F2F2;
+  --muted: #666;
+  --soft: #999;
+  --red: #E83A3A;
+  --green: #27AE60;
+  --gold: #F0A500;
+  --blue: #2980B9;
+
+  /* House colors */
+  --phi-psi: #003DA5;
+  --phi-psi-light: #1a5fd4;
+  --dz: #B8173A;
+  --dz-light: #e02040;
+  --phi-delt: #C8102E;
+  --phi-delt-light: #e8203e;
+  --phi-pi: #6A0DAD;
+  --phi-pi-light: #8B2FCC;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+/* TICKER */
+.ticker-bar {
+  background: #0d0d0d;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ticker-inner {
+  display: inline-flex;
+  gap: 48px;
+  animation: scroll 30s linear infinite;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+.tick { color: var(--muted); }
+.tick b { color: var(--text); }
+.tick .up { color: var(--green); }
+.tick .dn { color: var(--red); }
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* NAV */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 64px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,8,8,0.97);
+  backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 200;
+}
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--red); letter-spacing: 4px; }
+.nav-center {
+  display: flex; gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+.nav-tab {
+  padding: 6px 16px; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--muted); border: none; background: transparent;
+  font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.nav-tab.active { background: var(--red); color: white; }
+.nav-tab:hover:not(.active) { color: var(--text); }
+.nav-right { display: flex; gap: 10px; align-items: center; }
+.btn { padding: 8px 20px; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; letter-spacing: 0.05em; text-transform: uppercase; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+.btn-red { background: var(--red); color: white; }
+.btn-red:hover { background: #cc2e2e; }
+
+/* MAIN LAYOUT */
+.layout { display: grid; grid-template-columns: 280px 1fr 300px; gap: 0; min-height: calc(100vh - 96px); }
+
+/* SIDEBAR */
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+}
+.sidebar-section { padding: 0 20px; margin-bottom: 28px; }
+.sidebar-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+.house-btn {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 10px 12px; margin-bottom: 4px;
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  text-align: left;
+}
+.house-btn:hover { background: var(--surface); border-color: var(--border); }
+.house-btn.active { background: var(--surface); border-color: var(--border2); }
+.house-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.house-price { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 12px; }
+.house-change { font-family: 'DM Mono', monospace; font-size: 10px; margin-left: 4px; }
+
+.category-btn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 12px; margin-bottom: 2px;
+  background: transparent; border: none;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  text-align: left;
+}
+.category-btn:hover, .category-btn.active { color: var(--text); }
+.category-btn.active { color: var(--red); }
+.cat-icon { font-size: 14px; }
+.cat-count { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); background: var(--surface); padding: 2px 6px; }
+
+/* MAIN CONTENT */
+.main { padding: 0; }
+.main-header {
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.main-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; }
+.main-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.filter-row { display: flex; gap: 8px; }
+.filter-chip {
+  padding: 5px 12px; font-size: 11px; font-family: 'DM Mono', monospace;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.filter-chip:hover { border-color: var(--red); color: var(--red); }
+.filter-chip.active { background: var(--red); border-color: var(--red); color: white; }
+
+/* POWER RANKINGS HERO */
+.power-rankings {
+  margin: 24px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.pr-header {
+  background: var(--card);
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.pr-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: var(--gold); }
+.pr-live { display: flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--green); }
+.pr-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.rankings-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.rank-card {
+  padding: 20px 24px;
+  border-right: 1px solid var(--border);
+  position: relative; cursor: pointer;
+  transition: background 0.15s;
+}
+.rank-card:last-child { border-right: none; }
+.rank-card:hover { background: var(--card); }
+.rank-num { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--border2); line-height: 1; margin-bottom: 8px; }
+.rank-card.r1 .rank-num { color: var(--gold); }
+.rank-card.r2 .rank-num { color: #C0C0C0; }
+.rank-card.r3 .rank-num { color: #CD7F32; }
+.rank-house { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.rank-type { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-family: 'DM Mono', monospace; }
+.rank-bar-wrap { height: 4px; background: var(--border); margin-bottom: 8px; }
+.rank-bar { height: 100%; transition: width 1s ease; }
+.rank-price { font-family: 'Bebas Neue', sans-serif; font-size: 28px; }
+.rank-delta { font-family: 'DM Mono', monospace; font-size: 11px; margin-top: 2px; }
+
+/* MARKETS GRID */
+.markets-section { padding: 0 32px 32px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 16px; }
+.section-heading { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+.section-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.markets-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
+
+.market-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.market-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity 0.15s;
+}
+.market-card:hover { background: var(--card); border-color: var(--border2); }
+.market-card:hover::before { opacity: 1; }
+.mc-phi-psi::before { background: var(--phi-psi); }
+.mc-dz::before { background: var(--dz); }
+.mc-phi-delt::before { background: var(--phi-delt); }
+.mc-phi-pi::before { background: var(--phi-pi); }
+.mc-all::before { background: var(--gold); }
+
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-house-badge {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.1em;
+}
+.badge-phi-psi { background: rgba(0,61,165,0.2); color: #4d8de8; }
+.badge-dz { background: rgba(184,23,58,0.2); color: #e8607a; }
+.badge-phi-delt { background: rgba(200,16,46,0.2); color: #e87090; }
+.badge-phi-pi { background: rgba(106,13,173,0.2); color: #b06ee8; }
+.badge-all { background: rgba(240,165,0,0.15); color: var(--gold); }
+
+.card-category { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.card-title { font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
+.card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+.card-price-wrap {}
+.card-price-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; }
+.card-price { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; }
+.card-change { font-family: 'DM Mono', monospace; font-size: 11px; margin-top: 2px; }
+.card-meta { text-align: right; }
+.card-volume { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.card-resolves { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 4px; }
+.card-sparkline { margin: 14px 0 0; }
+
+.mini-spark { width: 100%; height: 40px; }
+
+/* BUY BUTTONS */
+.card-actions { display: flex; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.buy-btn, .sell-btn {
+  flex: 1; padding: 8px; font-size: 12px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; border: none;
+  text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.15s;
+}
+.buy-btn { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid rgba(39,174,96,0.3); }
+.buy-btn:hover { background: var(--green); color: white; }
+.sell-btn { background: rgba(232,58,58,0.1); color: var(--red); border: 1px solid rgba(232,58,58,0.2); }
+.sell-btn:hover { background: var(--red); color: white; }
+
+/* RIGHT PANEL */
+.right-panel {
+  border-left: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+}
+.rp-section { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.rp-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 14px; }
+
+.leaderboard-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.leaderboard-item:last-child { border-bottom: none; }
+.lb-rank { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--muted); width: 24px; flex-shrink: 0; }
+.lb-rank.gold { color: var(--gold); }
+.lb-info { flex: 1; }
+.lb-name { font-size: 13px; font-weight: 600; }
+.lb-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.lb-profit { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--green); }
+
+.activity-item {
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.activity-item:last-child { border-bottom: none; }
+.act-text { font-size: 12px; line-height: 1.5; color: var(--soft); }
+.act-text b { color: var(--text); }
+.act-text .up { color: var(--green); font-family: 'DM Mono', monospace; }
+.act-text .dn { color: var(--red); font-family: 'DM Mono', monospace; }
+.act-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card); border: 1px solid var(--border2);
+  width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+}
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; }
+.modal-price-row { display: flex; gap: 16px; margin-bottom: 20px; }
+.modal-stat { flex: 1; background: var(--surface); padding: 14px; border: 1px solid var(--border); }
+.modal-stat-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.modal-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; }
+.modal-question { font-size: 15px; line-height: 1.6; color: var(--soft); margin-bottom: 20px; }
+.modal-trade { background: var(--surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; }
+.trade-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+.shares-input { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.shares-input input { flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; font-family: 'DM Mono', monospace; font-size: 18px; outline: none; }
+.shares-input input:focus { border-color: var(--red); }
+.shares-input span { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+.modal-buy-btn { width: 100%; padding: 14px; font-size: 14px; font-weight: 700; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.1em; background: var(--green); color: white; border: none; cursor: pointer; transition: background 0.15s; }
+.modal-buy-btn:hover { background: #1e8449; }
+.modal-confirm { display: none; text-align: center; padding: 20px; }
+.modal-confirm .checkmark { font-size: 48px; margin-bottom: 12px; }
+.modal-confirm p { color: var(--soft); font-size: 14px; }
+
+/* COMMENT BOX */
+.comments-section { margin-top: 20px; }
+.comments-header { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.comment { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.comment-user { font-size: 12px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+.comment-text { font-size: 13px; color: var(--soft); line-height: 1.5; }
+.comment-input-row { display: flex; gap: 8px; margin-top: 12px; }
+.comment-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+.comment-input:focus { border-color: var(--red); }
+.comment-submit { padding: 8px 16px; background: var(--red); border: none; color: white; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}
+  .sidebar,.right-panel{display:none;}
+  .markets-grid{grid-template-columns:1fr;}
+  .rankings-grid{grid-template-columns:repeat(2,1fr);}
+  nav .nav-center{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">STOCKIU</div>
+  <div class="nav-center">
+    <button class="nav-tab active" onclick="filterCategory('all',this)">All Markets</button>
+    <button class="nav-tab" onclick="filterCategory('social',this)">Social</button>
+    <button class="nav-tab" onclick="filterCategory('academic',this)">Academic</button>
+    <button class="nav-tab" onclick="filterCategory('events',this)">Events</button>
+    <button class="nav-tab" onclick="filterCategory('recruitment',this)">Recruitment</button>
+  </div>
+  <div class="nav-right">
+    <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">💰 1,000 SC</span>
+    <button class="btn btn-ghost">Log In</button>
+    <button class="btn btn-red">Join Now</button>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Houses</div>
+      <button class="house-btn active" onclick="filterHouse('all',this)">
+        <div class="house-dot" style="background:var(--gold)"></div>
+        All Greek Life
+        <span class="house-price" style="color:var(--gold)">—</span>
+      </button>
+      <button class="house-btn" onclick="filterHouse('phi-psi',this)">
+        <div class="house-dot" style="background:var(--phi-psi-light)"></div>
+        Phi Kappa Psi
+        <span class="house-price up" id="sb-phi-psi">$0.74</span>
+      </button>
+      <button class="house-btn" onclick="filterHouse('dz',this)">
+        <div class="house-dot" style="background:var(--dz-light)"></div>
+        Delta Zeta
+        <span class="house-price up" id="sb-dz">$0.81</span>
+      </button>
+      <button class="house-btn" onclick="filterHouse('phi-delt',this)">
+        <div class="house-dot" style="background:var(--phi-delt-light)"></div>
+        Phi Delta Theta
+        <span class="house-price up" id="sb-phi-delt">$0.68</span>
+      </button>
+      <button class="house-btn" onclick="filterHouse('phi-pi',this)">
+        <div class="house-dot" style="background:var(--phi-pi-light)"></div>
+        Pi Beta Phi
+        <span class="house-price" id="sb-phi-pi" style="color:var(--red)">$0.59</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Categories</div>
+      <button class="category-btn active" onclick="filterCategory('all',this)"><span class="cat-icon">⚡</span>All Markets<span class="cat-count">24</span></button>
+      <button class="category-btn" onclick="filterCategory('social',this)"><span class="cat-icon">🎉</span>Social Rep<span class="cat-count">6</span></button>
+      <button class="category-btn" onclick="filterCategory('events',this)"><span class="cat-icon">🏆</span>Events<span class="cat-count">5</span></button>
+      <button class="category-btn" onclick="filterCategory('recruitment',this)"><span class="cat-icon">📋</span>Recruitment<span class="cat-count">4</span></button>
+      <button class="category-btn" onclick="filterCategory('academic',this)"><span class="cat-icon">📚</span>Academic<span class="cat-count">4</span></button>
+      <button class="category-btn" onclick="filterCategory('philanthropy',this)"><span class="cat-icon">❤️</span>Philanthropy<span class="cat-count">3</span></button>
+      <button class="category-btn" onclick="filterCategory('chaos',this)"><span class="cat-icon">🔥</span>Chaos Markets<span class="cat-count">2</span></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Your Portfolio</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+        <div style="display:flex;justify-content:space-between;"><span>Balance</span><span style="color:var(--text);font-family:'DM Mono',monospace;">1,000 SC</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>P&L Today</span><span style="color:var(--green);font-family:'DM Mono',monospace;">+82 SC</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Open Positions</span><span style="color:var(--text);font-family:'DM Mono',monospace;">0</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <div class="main-title">INDIANA UNIVERSITY GREEK LIFE MARKETS</div>
+        <div class="main-sub">24 active markets · Spring 2025 · Virtual currency only</div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="toggleFilter(this,'hot')">🔥 Hot</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'new')">✨ New</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'closing')">⏰ Closing Soon</div>
+      </div>
+    </div>
+
+    <!-- POWER RANKINGS -->
+    <div class="power-rankings" style="margin:24px 32px 0;">
+      <div class="pr-header">
+        <div class="pr-title">⚡ Greek Power Rankings — Live</div>
+        <div class="pr-live">Updates in real-time</div>
+      </div>
+      <div class="rankings-grid">
+        <div class="rank-card r1" onclick="openMarket('dz-overall')">
+          <div class="rank-num">#1</div>
+          <div class="rank-house">Delta Zeta</div>
+          <div class="rank-type">SORORITY</div>
+          <div class="rank-bar-wrap"><div class="rank-bar" style="width:81%;background:var(--dz-light)"></div></div>
+          <div class="rank-price" style="color:var(--dz-light)">$0.81</div>
+          <div class="rank-delta" style="color:var(--green)">▲ +5.2% this week</div>
+        </div>
+        <div class="rank-card r2" onclick="openMarket('phi-psi-overall')">
+          <div class="rank-num">#2</div>
+          <div class="rank-house">Phi Kappa Psi</div>
+          <div class="rank-type">FRATERNITY</div>
+          <div class="rank-bar-wrap"><div class="rank-bar" style="width:74%;background:var(--phi-psi-light)"></div></div>
+          <div class="rank-price" style="color:var(--phi-psi-light)">$0.74</div>
+          <div class="rank-delta" style="color:var(--green)">▲ +2.1% this week</div>
+        </div>
+        <div class="rank-card r3" onclick="openMarket('phi-delt-overall')">
+          <div class="rank-num">#3</div>
+          <div class="rank-house">Phi Delta Theta</div>
+          <div class="rank-type">FRATERNITY</div>
+          <div class="rank-bar-wrap"><div class="rank-bar" style="width:68%;background:var(--phi-delt-light)"></div></div>
+          <div class="rank-price" style="color:var(--phi-delt-light)">$0.68</div>
+          <div class="rank-delta" style="color:var(--red)">▼ -1.3% this week</div>
+        </div>
+        <div class="rank-card" onclick="openMarket('phi-pi-overall')">
+          <div class="rank-num">#4</div>
+          <div class="rank-house">Pi Beta Phi</div>
+          <div class="rank-type">SORORITY</div>
+          <div class="rank-bar-wrap"><div class="rank-bar" style="width:59%;background:var(--phi-pi-light)"></div></div>
+          <div class="rank-price" style="color:var(--phi-pi-light)">$0.59</div>
+          <div class="rank-delta" style="color:var(--red)">▼ -3.7% this week</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKETS -->
+    <div class="markets-section">
+      <div class="section-header">
+        <div class="section-heading">ALL MARKETS</div>
+        <div class="section-count" id="market-count">24 markets</div>
+      </div>
+      <div class="markets-grid" id="markets-grid">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="rp-section">
+      <div class="rp-label">🏆 Top Predictors</div>
+      <div class="leaderboard-item">
+        <div class="lb-rank gold">1</div>
+        <div class="lb-info"><div class="lb-name">@hoosier_bull</div><div class="lb-sub">47 correct · 89% acc</div></div>
+        <div class="lb-profit">+2,840 SC</div>
+      </div>
+      <div class="leaderboard-item">
+        <div class="lb-rank">2</div>
+        <div class="lb-info"><div class="lb-name">@kelley_trader</div><div class="lb-sub">38 correct · 84% acc</div></div>
+        <div class="lb-profit">+1,920 SC</div>
+      </div>
+      <div class="leaderboard-item">
+        <div class="lb-rank">3</div>
+        <div class="lb-info"><div class="lb-name">@greek_oracle</div><div class="lb-sub">31 correct · 81% acc</div></div>
+        <div class="lb-profit">+1,450 SC</div>
+      </div>
+      <div class="leaderboard-item">
+        <div class="lb-rank">4</div>
+        <div class="lb-info"><div class="lb-name">@iu_degen</div><div class="lb-sub">29 correct · 78% acc</div></div>
+        <div class="lb-profit">+1,100 SC</div>
+      </div>
+      <div class="leaderboard-item">
+        <div class="lb-rank">5</div>
+        <div class="lb-info"><div class="lb-name">@bloomington_q</div><div class="lb-sub">22 correct · 76% acc</div></div>
+        <div class="lb-profit">+890 SC</div>
+      </div>
+    </div>
+    <div class="rp-section">
+      <div class="rp-label">⚡ Live Activity</div>
+      <div id="activity-feed"></div>
+    </div>
+    <div class="rp-section" style="border-bottom:none;">
+      <div class="rp-label">📣 Trending Comment</div>
+      <div style="background:var(--surface);padding:14px;border:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;margin-bottom:6px;">@anonymous</div>
+        <div style="font-size:13px;color:var(--soft);line-height:1.6;">"DZ has been going crazy this semester. $0.81 is still undervalued. loading up."</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;">on DZ_OVERALL_SP25 · 47 likes</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- TRADE MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Contract</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-price-row">
+        <div class="modal-stat">
+          <div class="modal-stat-label">Current Price</div>
+          <div class="modal-stat-val" id="modal-price">—</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-label">24h Change</div>
+          <div class="modal-stat-val" id="modal-change" style="color:var(--green)">—</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-label">Volume</div>
+          <div class="modal-stat-val" id="modal-volume" style="font-size:20px">—</div>
+        </div>
+      </div>
+      <div class="modal-question" id="modal-question"></div>
+      <div class="modal-trade">
+        <div class="trade-label">Place Trade</div>
+        <div class="shares-input">
+          <input type="number" id="shares-input" value="10" min="1" max="500" oninput="updateCost()">
+          <span>shares @ <span id="cost-display">—</span> SC each</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:14px;">
+          <span>Total Cost</span><span id="total-cost" style="color:var(--text)">—</span>
+        </div>
+        <button class="modal-buy-btn" onclick="executeTrade()">🟢 BUY SHARES</button>
+      </div>
+      <div class="modal-confirm" id="modal-confirm">
+        <div class="checkmark">✅</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">TRADE EXECUTED</div>
+        <p>Your position is live. Check your portfolio to track it.</p>
+      </div>
+      <div class="comments-section">
+        <div class="comments-header">Anonymous Comments</div>
+        <div id="modal-comments"></div>
+        <div class="comment-input-row">
+          <input class="comment-input" placeholder="Add anonymous comment..." id="comment-input" onkeydown="if(event.key==='Enter')submitComment()">
+          <button class="comment-submit" onclick="submitComment()">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const houses = {
+  'phi-psi': { name: 'Phi Kappa Psi', short: 'ΦΚΨ', color: '#1a5fd4', badge: 'badge-phi-psi', card: 'mc-phi-psi' },
+  'dz': { name: 'Delta Zeta', short: 'ΔΖ', color: '#e02040', badge: 'badge-dz', card: 'mc-dz' },
+  'phi-delt': { name: 'Phi Delta Theta', short: 'ΦΔΘ', color: '#e8203e', badge: 'badge-phi-delt', card: 'mc-phi-delt' },
+  'phi-pi': { name: 'Pi Beta Phi', short: 'ΠΒΦ', color: '#8B2FCC', badge: 'badge-phi-pi', card: 'mc-phi-pi' },
+  'all': { name: 'All Houses', short: 'ALL', color: '#F0A500', badge: 'badge-all', card: 'mc-all' }
+};
+
+const markets = [
+  { id:'dz-overall', house:'dz', cat:'social', title:'Which sorority has the best social reputation Spring 2025?', price:0.81, change:+5.2, vol:'2,340', resolves:'May 2025', hot:true },
+  { id:'phi-psi-overall', house:'phi-psi', cat:'social', title:'Will Phi Psi rank #1 frat in campus social rep by end of semester?', price:0.74, change:+2.1, vol:'1,870', resolves:'May 2025', hot:true },
+  { id:'greek-week-frat', house:'phi-delt', cat:'events', title:'Will Phi Delta Theta win Greek Week 2025?', price:0.68, change:-1.3, vol:'3,100', resolves:'Apr 2025', hot:true },
+  { id:'greek-week-sor', house:'dz', cat:'events', title:'Will Delta Zeta win Greek Week 2025?', price:0.72, change:+4.1, vol:'2,890', resolves:'Apr 2025', hot:true },
+  { id:'phi-psi-recruitment', house:'phi-psi', cat:'recruitment', title:'Will Phi Psi have the strongest Fall 2025 recruitment class of any frat?', price:0.61, change:+0.8, vol:'980', resolves:'Sep 2025' },
+  { id:'dz-recruitment', house:'dz', cat:'recruitment', title:'Will DZ have the most new members in Fall 2025 sorority recruitment?', price:0.55, change:-2.4, vol:'760', resolves:'Sep 2025' },
+  { id:'phi-delt-gpa', house:'phi-delt', cat:'academic', title:'Will Phi Delt achieve the highest chapter GPA among IU frats Spring 2025?', price:0.44, change:+1.2, vol:'540', resolves:'May 2025' },
+  { id:'dz-philanthropy', house:'dz', cat:'philanthropy', title:'Will DZ raise $50K+ for their philanthropy event Spring 2025?', price:0.78, change:+6.3, vol:'1,200', resolves:'Apr 2025', hot:true },
+  { id:'phi-pi-overall', house:'phi-pi', cat:'social', title:'Will Pi Beta Phi move up in the Greek life power rankings by semester end?', price:0.59, change:-3.7, vol:'890', resolves:'May 2025' },
+  { id:'phi-psi-events', house:'phi-psi', cat:'events', title:'Will Phi Psi throw the most talked-about party of Spring 2025?', price:0.66, change:+3.3, vol:'1,540', resolves:'May 2025' },
+  { id:'phi-delt-recruitment', house:'phi-delt', cat:'recruitment', title:'Will Phi Delt have 40+ new pledges in Fall 2025 recruitment?', price:0.52, change:-0.5, vol:'620', resolves:'Sep 2025' },
+  { id:'phi-pi-philanthropy', house:'phi-pi', cat:'philanthropy', title:'Will Pi Phi exceed last year\'s Arrow Classic fundraising total?', price:0.63, change:+1.8, vol:'430', resolves:'Apr 2025' },
+  { id:'all-greek-week', house:'all', cat:'events', title:'Will Greek Week 2025 attendance break the record from 2023?', price:0.71, change:+2.9, vol:'2,100', resolves:'Apr 2025' },
+  { id:'chaos-couples', house:'all', cat:'chaos', title:'Will more than 5 new Greek cross-house couples form at the Spring mixer?', price:0.48, change:+8.1, vol:'3,400', resolves:'Mar 2025', hot:true },
+  { id:'dz-gpa', house:'dz', cat:'academic', title:'Will DZ chapter GPA exceed 3.5 Spring 2025?', price:0.82, change:+1.1, vol:'670', resolves:'May 2025' },
+  { id:'chaos-president', house:'all', cat:'chaos', title:'Will any house president get called out publicly on YikYak this semester?', price:0.77, change:+12.4, vol:'4,200', resolves:'May 2025', hot:true },
+];
+
+let currentMarket = null;
+let activeHouse = 'all';
+let activeCategory = 'all';
+
+const comments = {
+  'dz-overall': [
+    { user:'@anon_7742', text:'DZ has been on a different level this year. Easy buy.' },
+    { user:'@greek_watcher', text:'Wait until after formal season, price will move a lot.' },
+  ],
+  'chaos-couples': [
+    { user:'@phi_insider', text:'I have insider info. Loading up heavily on YES.' },
+    { user:'@anon_1193', text:'This market is absolutely unhinged and I love it' },
+  ],
+  'chaos-president': [
+    { user:'@anon_9981', text:'This resolves YES in like 2 weeks mark my words' },
+    { user:'@anon_3302', text:'Bold of you to think it hasn\'t already happened lmao' },
+  ]
+};
+
+function getComments(id) {
+  return comments[id] || [{ user:'@anon_0001', text:'First trade on this market. Bullish.' }];
+}
+
+function sparklinePath(price, up) {
+  const pts = [];
+  let v = price - 0.15;
+  for(let i=0;i<10;i++) { v += (Math.random()-0.45)*0.04; pts.push(Math.max(0.01,Math.min(0.99,v))); }
+  pts.push(price);
+  const w = 200, h = 40;
+  return pts.map((p,i) => `${(i/(pts.length-1))*w},${h-(p*h)}`).join(' ');
+}
+
+function renderMarkets(filter_house='all', filter_cat='all') {
+  const grid = document.getElementById('markets-grid');
+  const filtered = markets.filter(m =>
+    (filter_house === 'all' || m.house === filter_house) &&
+    (filter_cat === 'all' || m.cat === filter_cat)
+  );
+  document.getElementById('market-count').textContent = `${filtered.length} markets`;
+  grid.innerHTML = filtered.map(m => {
+    const h = houses[m.house];
+    const up = m.change >= 0;
+    const pts = sparklinePath(m.price, up);
+    return `
+    <div class="market-card ${h.card}" onclick="openMarket('${m.id}')">
+      <div class="card-top">
+        <span class="card-house-badge ${h.badge}">${h.short}</span>
+        <span class="card-category">${catEmoji(m.cat)} ${m.cat}</span>
+      </div>
+      <div class="card-title">${m.title}</div>
+      <div class="card-bottom">
+        <div class="card-price-wrap">
+          <div class="card-price-label">Market Price</div>
+          <div class="card-price" style="color:${h.color}">$${m.price.toFixed(2)}</div>
+          <div class="card-change" style="color:${up?'var(--green)':'var(--red)'}">${up?'▲':'▼'} ${Math.abs(m.change)}% this week</div>
+        </div>
+        <div class="card-meta">
+          <div class="card-volume">${m.vol} trades</div>
+          <div class="card-resolves">Resolves ${m.resolves}</div>
+          ${m.hot?'<div style="font-size:10px;color:var(--gold);font-family:DM Mono,monospace;margin-top:4px;">🔥 TRENDING</div>':''}
+        </div>
+      </div>
+      <svg class="mini-spark" viewBox="0 0 200 40" preserveAspectRatio="none">
+        <polyline points="${pts}" fill="none" stroke="${up?'#27AE60':'#E83A3A'}" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <div class="card-actions">
+        <button class="buy-btn" onclick="event.stopPropagation();openMarket('${m.id}','buy')">▲ Buy YES</button>
+        <button class="sell-btn" onclick="event.stopPropagation();openMarket('${m.id}','sell')">▼ Buy NO</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function catEmoji(c) {
+  return {social:'🎉',events:'🏆',recruitment:'📋',academic:'📚',philanthropy:'❤️',chaos:'🔥'}[c]||'⚡';
+}
+
+function filterHouse(h, el) {
+  activeHouse = h;
+  document.querySelectorAll('.house-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderMarkets(activeHouse, activeCategory);
+}
+
+function filterCategory(c, el) {
+  activeCategory = c;
+  document.querySelectorAll('.nav-tab,.category-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderMarkets(activeHouse, activeCategory);
+}
+
+function toggleFilter(el, f) {
+  el.classList.toggle('active');
+}
+
+function openMarket(id, side='buy') {
+  const m = markets.find(x=>x.id===id);
+  if(!m) return;
+  currentMarket = m;
+  const h = houses[m.house];
+  document.getElementById('modal-title').textContent = m.title.substring(0,40)+'...';
+  document.getElementById('modal-price').textContent = '$'+m.price.toFixed(2);
+  document.getElementById('modal-price').style.color = h.color;
+  document.getElementById('modal-change').textContent = (m.change>=0?'▲ +':'▼ ')+Math.abs(m.change)+'%';
+  document.getElementById('modal-change').style.color = m.change>=0?'var(--green)':'var(--red)';
+  document.getElementById('modal-volume').textContent = m.vol;
+  document.getElementById('modal-question').textContent = m.title;
+  document.getElementById('modal-confirm').style.display = 'none';
+  document.querySelector('.modal-trade').style.display = 'block';
+  document.getElementById('shares-input').value = 10;
+  updateCost();
+  const comms = getComments(id);
+  document.getElementById('modal-comments').innerHTML = comms.map(c=>`
+    <div class="comment">
+      <div class="comment-user">${c.user}</div>
+      <div class="comment-text">${c.text}</div>
+    </div>`).join('');
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function updateCost() {
+  if(!currentMarket) return;
+  const shares = parseInt(document.getElementById('shares-input').value)||0;
+  const cost = (shares * currentMarket.price * 10).toFixed(0);
+  document.getElementById('cost-display').textContent = (currentMarket.price*10).toFixed(1);
+  document.getElementById('total-cost').textContent = cost + ' SC';
+}
+
+function executeTrade() {
+  document.querySelector('.modal-trade').style.display = 'none';
+  document.getElementById('modal-confirm').style.display = 'block';
+  addActivity(`You bought shares of <b>${currentMarket.title.substring(0,35)}...</b>`);
+}
+
+function submitComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const id = Math.floor(Math.random()*9000+1000);
+  const div = document.createElement('div');
+  div.className = 'comment';
+  div.innerHTML = `<div class="comment-user">@anon_${id}</div><div class="comment-text">${text}</div>`;
+  document.getElementById('modal-comments').prepend(div);
+  input.value = '';
+  if(currentMarket && !comments[currentMarket.id]) comments[currentMarket.id]=[];
+  if(currentMarket) comments[currentMarket.id].unshift({user:`@anon_${id}`,text});
+}
+
+// Live activity feed
+const activityTemplates = [
+  () => { const m=markets[Math.floor(Math.random()*markets.length)]; return `<b>@anon_${rnd()}</b> bought <span class="up">↑ ${Math.floor(Math.random()*200+10)} shares</span> of <b>${m.title.substring(0,40)}...</b>`; },
+  () => { const m=markets[Math.floor(Math.random()*markets.length)]; return `<b>@anon_${rnd()}</b> commented on <b>${houses[m.house].name}</b> market`; },
+  () => { const h=Object.values(houses).filter(x=>x.short!=='ALL'); const pick=h[Math.floor(Math.random()*h.length)]; return `<b>${pick.name}</b> price just moved <span class="up">▲ ${(Math.random()*2+0.5).toFixed(1)}%</span>`; },
+  () => `New contract created: <b>@anon_${rnd()}</b> opened a ${['social','events','chaos'][Math.floor(Math.random()*3)]} market`,
+];
+function rnd() { return Math.floor(Math.random()*9000+1000); }
+function addActivity(html) {
+  const feed = document.getElementById('activity-feed');
+  const item = document.createElement('div');
+  item.className = 'activity-item';
+  item.innerHTML = `<div class="act-text">${html}</div><div class="act-time">just now</div>`;
+  feed.prepend(item);
+  while(feed.children.length > 8) feed.removeChild(feed.lastChild);
+}
+function simulateActivity() {
+  const t = activityTemplates[Math.floor(Math.random()*activityTemplates.length)];
+  addActivity(t());
+  setTimeout(simulateActivity, Math.random()*4000+2000);
+}
+
+// Ticker
+function buildTicker() {
+  const items = markets.map(m=>`<span class="tick"><b>${m.id.toUpperCase().replace(/-/g,'_')}</b> <span class="${m.change>=0?'up':'dn'}">${m.change>=0?'▲':'▼'} $${m.price.toFixed(2)}</span></span>`).join('');
+  const el = document.getElementById('ticker');
+  el.innerHTML = items + items;
+}
+
+// Price drift
+function driftPrices() {
+  markets.forEach(m => {
+    const delta = (Math.random()-0.5)*0.008;
+    m.price = Math.max(0.05, Math.min(0.97, m.price + delta));
+  });
+  document.getElementById('sb-phi-psi').textContent = '$'+markets.find(x=>x.id==='phi-psi-overall').price.toFixed(2);
+  document.getElementById('sb-dz').textContent = '$'+markets.find(x=>x.id==='dz-overall').price.toFixed(2);
+  document.getElementById('sb-phi-delt').textContent = '$'+markets.find(x=>x.id==='phi-delt-overall'||x.id==='greek-week-frat').price.toFixed(2);
+  document.getElementById('sb-phi-pi').textContent = '$'+markets.find(x=>x.id==='phi-pi-overall').price.toFixed(2);
+  buildTicker();
+  setTimeout(driftPrices, 5000);
+}
+
+// Init
+renderMarkets();
+buildTicker();
+simulateActivity();
+driftPrices();
+</script>
+</body>
+</html>
